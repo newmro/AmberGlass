@@ -41,6 +41,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from math import floor
 from pathlib import Path
 from typing import Any
 
@@ -119,6 +120,18 @@ def clean_text(value: Any) -> str:
     return str(value).replace("\r\n", "\n").replace("\r", "\n").strip()
 
 
+def markup(value: Any) -> str:
+    # ceny +20% wzgledem zlotywidelec.pl, zaokraglenie w gore do ,90.
+    text = clean_text(value)
+    if not text:
+        return ""
+    x = float(text) * 1.20
+    n = floor(x) + 0.9
+    if n < x:
+        n += 1
+    return f"{n:.2f}"
+
+
 def append_field(parent: etree._Element, name: str, value: str, *, cdata: bool = False) -> None:
     text = clean_text(value)
     if not text:
@@ -142,8 +155,8 @@ def product_fields(product: dict[str, Any]) -> dict[str, str]:
     images = [clean_text(u) for u in (product.get("images") or []) if clean_text(u)]
     fields: dict[str, str] = {
         "title": clean_text(product.get("title")),
-        "price": clean_text(product.get("price")),
-        "sale_price": clean_text(product.get("sale_price")),
+        "price": markup(product.get("price")),
+        "sale_price": markup(product.get("sale_price")),
         "sku": clean_text(product.get("sku")),
         "ean": clean_text(product.get("gtin")),
         "image_urls": IMAGE_URL_SEP.join(images),
